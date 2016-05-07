@@ -21,7 +21,7 @@ plates = [45, 35, 25, 10, 5, 2.5]
 
 getClosestPlateFor : Float -> Float
 getClosestPlateFor weight =
-  let iterate weight plates =
+  let f weight plates =
     case (List.head plates) of
       Nothing ->
         0
@@ -29,22 +29,26 @@ getClosestPlateFor weight =
         if (weight >= plate) then
           plate
         else
-          iterate weight (List.drop 1 plates)
+          f weight (List.drop 1 plates)
   in
-    iterate weight plates
+    f weight plates
+
+getStackOfWeights : Float -> List Float -> List Float
+getStackOfWeights weight stack =
+  if weight == 0 then
+    stack
+  else
+    let f plate =
+      getStackOfWeights (weight - plate) (stack ++ [plate])
+    in
+      f (getClosestPlateFor weight)
 
 calculate : Float -> List Float
 calculate weight =
   if weight < 45 || weight % 5 /= 0 then
     []
   else
-    let iterate weight stack =
-      if weight == 0 then
-        stack
-      else
-        iterate (weight - (getClosestPlateFor weight)) (stack ++ [(getClosestPlateFor weight)])
-    in
-      iterate ((weight - 45) / 2) []
+    getStackOfWeights ((weight - 45) / 2) []
 
 view address model =
   div
