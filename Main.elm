@@ -13,9 +13,6 @@ main =
 barbellWeight : Float
 barbellWeight = 45
 
-model : Float
-model = barbellWeight -- initial value
-
 plates : List Float
 plates = [45, 35, 25, 10, 5, 2.5]
 
@@ -50,6 +47,26 @@ calculate weight =
   else
     getStackOfWeights ((weight - 45) / 2) []
 
+stackOfWeights : Float -> Html
+stackOfWeights weight =
+  ul
+    []
+    (List.map
+      (\n -> li [] [text (toString n)])
+      (calculate weight)
+    )
+
+
+model : Float
+model = barbellWeight
+
+stepperButton : Float -> Signal.Address Action -> Html
+stepperButton val address =
+  button
+    [ onClick address (Increment val)
+    , class "stepper" ]
+    [ text (if val < 0 then (toString val) else "+" ++ (toString val)) ]
+
 view address model =
   div
     []
@@ -60,42 +77,20 @@ view address model =
           [text (toString model)]
       , text "lbs"
       ]
-    , button
-        [ class "stepper"
-        , onClick address (Decrement 90) ]
-        [ text "-90" ]
-    , button
-        [ class "stepper"
-        , onClick address (Decrement 5) ]
-        [ text "-5"]
-    , button
-        [ class "stepper"
-        , onClick address (Increment 5) ]
-        [ text "+5" ]
-    , button
-        [ class "stepper"
-        , onClick address (Increment 90) ]
-        [ text "+90" ]
+    , stepperButton -90 address
+    , stepperButton -5 address
+    , stepperButton 5 address
+    , stepperButton 90 address
     , stackOfWeights model
    ]
 
-stackOfWeights weight =
-  ul
-    []
-    (List.map
-      (\n -> li [] [text (toString n)])
-      (calculate weight)
-    )
-
 type Action
   = Increment Float
-  | Decrement Float
 
 update : Action -> Float -> Float
 update action model =
   case action of
-    Increment val -> model + val
-    Decrement val ->
-      if (model - val) < barbellWeight
+    Increment val ->
+      if (model + val) < barbellWeight
         then barbellWeight
-        else model - val
+      else model + val
