@@ -1,53 +1,50 @@
+import List exposing (head, tail)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import StartApp.Simple as StartApp
 
 main =
-  StartApp.start { model = model, view = view, update = update }
+  StartApp.start
+    { model = model
+    , view = view
+    , update = update }
 
-model = 45
+barbellWeight : Float
+barbellWeight = 45
+
+model : Float
+model = barbellWeight -- initial value
 
 plates : List Float
 plates = [45, 35, 25, 10, 5, 2.5]
 
-{-
-function calculate(weight) {
-  let results = [];
+getClosestPlateFor : Float -> Float
+getClosestPlateFor weight =
+  let iterate weight plates =
+    case (List.head plates) of
+      Nothing ->
+        0
+      Just plate ->
+        if (weight >= plate) then
+          plate
+        else
+          iterate weight (List.drop 1 plates)
+  in
+    iterate weight plates
 
-  if (weight < BARBELL_WEIGHT || weight % 5 !== 0) {
-    return results;
-  }
-
-  weight -= BARBELL_WEIGHT;
-  weight /= 2;
-  while (weight > 0) {
-    for (let plate of PLATES) {
-      if (weight >= plate) {
-        weight -= plate;
-        results.push(plate);
-        break;
-      }
-    }
-  }
-
-  return results;
-}
--}
-
-calculate : Int -> List Float
+calculate : Float -> List Float
 calculate weight =
   if weight < 45 || weight % 5 /= 0 then
     []
   else
-    calculate' (weight) []
-
-calculate' : Int -> List Float -> List Float
-calculate' weight stack =
-  if weight == 0 then
-    stack
-  else
-    calculate' (weight - 5) (stack ++ [5])
+    let iterate weight stack =
+      if weight == 0 then
+        stack
+      else
+        iterate (weight - (getClosestPlateFor weight)) (stack ++ [(getClosestPlateFor weight)])
+    in
+      iterate ((weight - 45) / 2) []
 
 view address model =
   div
@@ -55,8 +52,8 @@ view address model =
     [ h1
       []
       [ span
-        [id "targetWeightSpan"]
-        [text (toString model)]
+          []
+          [text (toString model)]
       , text "lbs"
       ]
     , button
@@ -87,13 +84,14 @@ stackOfWeights weight =
     )
 
 type Action
-  = Increment Int
-  | Decrement Int
+  = Increment Float
+  | Decrement Float
 
+update : Action -> Float -> Float
 update action model =
   case action of
     Increment val -> model + val
     Decrement val ->
-      if (model - val) < 45
-        then 45
+      if (model - val) < barbellWeight
+        then barbellWeight
         else model - val
