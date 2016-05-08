@@ -6,7 +6,7 @@ import StartApp.Simple as StartApp
 
 main =
   StartApp.start
-    { model = model
+    { model = 45
     , view = view
     , update = update }
 
@@ -57,9 +57,6 @@ stackOfWeights weight =
     )
 
 
-model : Float
-model = barbellWeight
-
 stepperButton : Float -> Signal.Address Action -> Html
 stepperButton val address =
   button
@@ -67,6 +64,9 @@ stepperButton val address =
     , class "stepper" ]
     [ text (if val < 0 then (toString val) else "+" ++ (toString val)) ]
 
+type alias Model = Float
+
+view : Signal.Address Action -> Model -> Html
 view address model =
   div
     []
@@ -84,8 +84,7 @@ view address model =
     , stackOfWeights model
    ]
 
-type Action
-  = Increment Float
+type Action = Increment Float
 
 update : Action -> Float -> Float
 update action model =
