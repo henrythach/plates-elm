@@ -1,3 +1,5 @@
+module Main where
+
 import List exposing (head, tail)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -13,8 +15,19 @@ main =
 barbellWeight : Float
 barbellWeight = 45
 
-plates : List Float
-plates = [45, 35, 25, 10, 5, 2.5]
+type alias Plate =
+  { weight: Float
+  , percentage: Float }
+
+plates : List Plate
+plates =
+  [ { weight = 45, percentage = 100 }
+  , { weight = 35, percentage = 90 }
+  , { weight = 25, percentage = 80 }
+  , { weight = 10, percentage = 70 }
+  , { weight = 5, percentage = 60 }
+  , { weight = 2.5, percentage = 50 }
+  ]
 
 getClosestPlateFor : Float -> Float
 getClosestPlateFor weight =
@@ -28,7 +41,7 @@ getClosestPlateFor weight =
         else
           f weight (List.drop 1 plates)
   in
-    f weight plates
+    f weight (List.map (\{weight} -> weight) plates)
 
 getStackOfWeights : Float -> List Float -> List Float
 getStackOfWeights weight stack =
@@ -47,15 +60,26 @@ calculate weight =
   else
     getStackOfWeights ((weight - 45) / 2) []
 
+getPlateWidthPercentage : Float -> Float
+getPlateWidthPercentage weight =
+  case List.head (List.filter (\plate -> plate.weight == weight) plates) of
+    Nothing -> 100
+    Just p -> p.percentage
+
+plateHtml : Float -> Html
+plateHtml weight =
+  li
+    [ class "plate"
+    , style
+      [ ("width", (toString (getPlateWidthPercentage weight)) ++ "%") ]
+    ]
+    [ text (toString weight) ]
+
 stackOfWeights : Float -> Html
 stackOfWeights weight =
   ul
-    []
-    (List.map
-      (\n -> li [] [text (toString n)])
-      (calculate weight)
-    )
-
+    [ class "plate-container" ]
+    (List.map (\n -> plateHtml n) (calculate weight))
 
 stepperButton : Float -> Signal.Address Action -> Html
 stepperButton val address =
